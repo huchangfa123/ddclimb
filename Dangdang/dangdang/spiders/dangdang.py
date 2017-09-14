@@ -25,8 +25,8 @@ class DangDangSpider(scrapy.Spider):
         goodslists = response.selector.xpath('//*[@id="navigation"]/ul/li[1]/div[2]/div[1]/div/span')
         try:
             category_big = '童书'
-            category_big_id = 41
-            category_big_url = "http://category.dangdang.com/pg1-cp01.41.00.00.00.00.html".format(str(category_big_id))
+            category_big_id = '41'
+            category_big_url = "http://category.dangdang.com/pg1-cp01.41.00.00.00.00.html"
             yield scrapy.Request(url=category_big_url, headers=headers, callback=self.second_parse, meta={"ID1": category_big_id, "ID2": category_big})
         except Exception:
             pass
@@ -43,7 +43,9 @@ class DangDangSpider(scrapy.Spider):
             try:
                 category_small_name = goods.xpath('a/text()').pop().replace(" ", "").split('(')[0]
                 category_small_id = goods.xpath('a/@href').pop().split('.')[2]
-                category_small_url = "http://category.dangdang.com/pg1-cp01.{}.{}.00.00.00.html".format(str(response.meta["ID1"]), str(category_small_id))
+                print('aa1:' + category_small_id)
+                print('aa2:' + response.meta["ID1"])
+                category_small_url = "http://category.dangdang.com/pg1-cp01.41.{}.00.00.00.html".format(str(category_small_id))
                 yield scrapy.Request(url=category_small_url, callback=self.detail_parse, \
                                      meta={"ID1": response.meta["ID1"], "ID2": response.meta["ID2"], \
                                            "ID3": category_small_id, "ID4": category_small_name})
@@ -51,11 +53,13 @@ class DangDangSpider(scrapy.Spider):
                 pass
  
     def detail_parse(self, response):
-        if response.meta["ID2"] is "童书":
+        if response.meta["ID2"] == "童书":
             for i in range(1, 101):
                 url = 'http://category.dangdang.com/pg{}-cp01.{}.{}.00.00.00.html'.format(str(i), response.meta["ID1"], response.meta["ID3"])
+                print('22:' + url)
                 try:
                     contents = etree.HTML(requests.get(url).content.decode('gbk'))
+                    print('11:', contents)
                     goodslist = contents.xpath('//ul[@class="bigimg"]/li')
                     for goods in goodslist:
                         item = DangdangItem()
@@ -69,6 +73,7 @@ class DangDangSpider(scrapy.Spider):
                             item['category_two'] = response.meta["ID4"]
                         except Exception:
                             pass
+                        print(item)
                         yield item
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(e)
